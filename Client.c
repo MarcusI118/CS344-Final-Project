@@ -8,13 +8,25 @@
 #define RCVBUFSIZE 100   /* Size of receive buffer */
 #define MAX_SIZE 51 /*Includes room for null */
 
-struct menu{
+struct menu
+{
   unsigned char line1[20];
   unsigned char line2[20];
   unsigned char line3[20];
+  unsigned char line4[20];
 };
 
-typedef struct{
+struct project
+{		
+  unsigned char line1[20];
+  unsigned char line2[20];
+  unsigned char line3[20];
+  unsigned char line4[20]; 
+  int line5;
+}displayProject;
+
+typedef struct
+{
   unsigned int x;
   unsigned int y;
   unsigned char oper;
@@ -38,8 +50,7 @@ void sendUserFullNameSingup(int);
 
 void sendProjectInfo(int);
 
-
-
+void viewList(int);
 void sendUsernameLogin(int);
 void sendPasswordLogin(int);
 
@@ -141,7 +152,11 @@ void talkToAuthServer(int sock)
 		sendProjectInfo(sock);
                 break;
             case 2:
+		sendProjectInfo(sock);
                 break;
+	   case 4:
+		viewList(sock);
+		break;
             }
         if(selection == 3) break;
     }
@@ -151,6 +166,19 @@ void talkToAuthServer(int sock)
     printf("%s\n", bye);
 }
 
+
+void viewList(int sock)
+{
+    struct project projectBuffer;     /* Buffer for echo string */
+
+    printf("Projects: \n");
+    get(sock, &projectBuffer, sizeof(struct project)); 
+    printf("%s\n", projectBuffer.line1);
+    printf("%s\n", projectBuffer.line2);
+    printf("%s\n", projectBuffer.line3);
+    printf("%s\n", projectBuffer.line4); 
+    printf("%d\n", projectBuffer.line5);
+}
 
 unsigned int displayMenuAndSendSelection(int sock)
 {
@@ -163,6 +191,7 @@ unsigned int displayMenuAndSendSelection(int sock)
     printf("%s\n", menuBuffer.line1);
     printf("%s\n", menuBuffer.line2);
     printf("%s\n", menuBuffer.line3);
+    printf("%s\n", menuBuffer.line4); 
     scanf("%d", &response);
     output = htonl(response);
     put(sock, &output, sizeof(unsigned int));

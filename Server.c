@@ -9,33 +9,53 @@
 #define RCVBUFSIZE 32   /* Size of receive buffer */
 #define MAX_SIZE 51 /*Includes room for null */
 
-struct menu{
+struct menu
+{
   unsigned char line1[20];
   unsigned char line2[20];
   unsigned char line3[20];
+  unsigned char line4[20];
 } men;
+
+
+struct project
+{		
+  unsigned char line1[20];
+  unsigned char line2[20];
+  unsigned char line3[20];
+  unsigned char line4[20]; 
+  int line5;
+}displayProject;
+
+typedef struct ListData 
+{
+	char projectname[100];
+	char projectdescription[1000];
+	char date[8];
+	char duedate[8];
+	int numusers;
+	struct ListData *next;
+}DataInList;
 
 void DieWithError(char *errorMessage);  /* Error handling function */
 void HandleTCPClient(int clntSocket);   /* TCP client handling function */
 void get(int, void *, unsigned int);
 void put(int, void *, unsigned int);
 unsigned int sendMenuAndWaitForResponse(int);
-
 unsigned int sendMenuAuth(int);
 void HandleTCPClientAuth(int);
-
-
-
 void askForPasswordSignup(int , char *, unsigned int);
 void askForFullNameSingup(int , char *, unsigned int);
 void askForUsernameSignup(int , char * , unsigned int );
 void writeUserNameToFile(char *, char *, char *);
 void askForUsernameLogin(int, char *, unsigned int);
 void askForPasswordLogin(int, char *, unsigned int);
-
 void askForProjectInfo(int, char *, char *, char *, char *, int *);
 int logedIn(char *, char *);
-
+DataInList * appendToList(DataInList *, char[], char [], char [], char [], int);
+void editList(DataInList *, char[], char [], char [], char [], int);
+void displayList(DataInList *);
+void sendProjects(int, char *, char *, char *, char *, int);
 
 int main(int argc, char *argv[])
 {
@@ -166,6 +186,8 @@ void HandleTCPClientAuth(int clntSocket)
     unsigned char projectDueDate[8];
     int numUsers;
     
+
+    DataInList *LinkedList = NULL;
     unsigned char bye[] = "Exiting Work Project Tool!";
 	
     response = sendMenuAuth(clntSocket);
@@ -175,11 +197,18 @@ void HandleTCPClientAuth(int clntSocket)
         {
             case 1: printf("Add \n");
 		    askForProjectInfo(clntSocket, projectName, projectDescription, projectDate, projectDueDate, &numUsers);
-	            printf("%s %s %s %s %d", projectName,projectDescription, projectDate, projectDueDate, numUsers);
+		     LinkedList = appendToList(LinkedList, projectName, projectDescription, projectDate, projectDueDate, numUsers);
+		     displayList(LinkedList);
+	            //printf("%s %s %s %s %d", projectName,projectDescription, projectDate, projectDueDate, numUsers);
                     break;
-            case 2: printf("Delete\n");
-
+            case 2: printf("Edit\n");
+		    askForProjectInfo(clntSocket, projectName, projectDescription, projectDate, projectDueDate, &numUsers);
+		    editList(LinkedList, projectName, projectDescription, projectDate, projectDueDate, numUsers);
+	    case 3: printf("Quit");
                     break;
+	    case 4: printf("View");
+		displayList(LinkedList);
+		break;
             default: 
 	    break; 
         }
@@ -192,9 +221,62 @@ void HandleTCPClientAuth(int clntSocket)
 }
 
 
-void askForProjectInfo(int sock, char * projectName, char * projectDescription, char * projectDate, char * projectDueDate, int * numUsers)
+void editList(DataInList *head, char pname[], char pdes[], char pd[], char pdd[], int users)
+{
+	int found = 0;
+	while(head != NULL)
+	{
+		if(strcmp(head->projectname, pname) == 0)
+		{
+			found = 1;
+			strcpy(head->projectdescription, pdes);
+			strcpy(head->date, pd);
+			strcpy(head->duedate, pdd);	
+			head->numusers = users;
+		}
+		head = head->next;
+	}
+	if(found == 0)
+	{
+		printf("Project Not Found");
+	}
+}
+
+DataInList * appendToList(DataInList *head, char pname[], char pdes[], char pd[], char pdd[], int users)
 {
 
+	DataInList *newNode = (DataInList *)malloc(sizeof(DataInList));
+	DataInList *current = head;
+
+        strcpy(newNode->projectname, pname);
+	strcpy(newNode->projectdescription, pdes);
+	strcpy(newNode->date, pd);
+	strcpy(newNode->duedate, pdd);
+	newNode->numusers = users;
+
+	if(head == NULL)
+	{
+		head = newNode;
+		head->next = NULL;
+	}
+	else
+	{
+		newNode->next = NULL;
+		while(current->next)
+		{
+			current = current->next;
+		}
+		current->next = newNode;
+		
+	}
+
+	return head;
+}
+
+
+
+void askForProjectInfo(int sock, char * projectName, char * projectDescription, char * projectDate, char * projectDueDate, int * numUsers)
+{
 	unsigned char msg[21];
 	int numIn = 0;
 
@@ -227,10 +309,7 @@ void askForProjectInfo(int sock, char * projectName, char * projectDescription, 
 	strcpy(msg, "Num Users");
 	put(sock, msg, sizeof(msg));
 	get(sock, &numIn, sizeof(int));
-	
 	*numUsers = ntohl(numIn);
-	
-	
 }
 
 unsigned int sendMenuAuth(int clntSocket)
@@ -239,8 +318,9 @@ unsigned int sendMenuAuth(int clntSocket)
     unsigned int response = 0;
     memset(&projectMenu, 0, sizeof(struct menu));   /* Zero out structure */
     strcpy(projectMenu.line1,"1)Add\n");
-    strcpy(projectMenu.line2, "2)Delete\n");
+    strcpy(projectMenu.line2, "2)Edit\n");
     strcpy(projectMenu.line3, "3)Quit\n");
+    strcpy(projectMenu.line4, "4)View\n");
     printf("Sending menu\n");
     put(clntSocket, &projectMenu, sizeof(struct menu));
     get(clntSocket, &response, sizeof(unsigned int));
@@ -339,6 +419,44 @@ int logedIn(char * userAuth, char * passAuth)
 			break; 		
 		}
 	}
+}
+
+void displayList(DataInList *head)
+{
+	printf("Projects\n");
+	while(head != NULL)
+	{
+		printf("Name:%s Description:%s Date:%s Due Date:%s Users:%d\n\n", head->projectname, head->projectdescription, head->date, head->duedate, head->numusers);
+		head = head->next;
+
+	}
+	printf("\n");
+}
+
+/*void sendList(DataInList *head, int sock)
+{
+	printf("Projects\n");
+	while(head != NULL)
+	{
+		printf("Name:%s Description:%s Date:%s Due Date:%s Users:%d\n\n", head->projectname, head->projectdescription, head->date, head->duedate, head->numusers);
+		head = head->next;
+		//sendProjects(sock, head->projectname, head->projectdescription, head->date, head->duedate, head->numusers);
+
+	}
+	printf("\n");
+}*/
+
+void sendProjects(int clntSocket, char * name, char * des, char * date, char * duedate, int numusers)
+{
+    struct project projectDisplay;
+    memset(&projectDisplay, 0, sizeof(struct project));   /* Zero out structure */
+    strcpy(projectDisplay.line1,name);
+    strcpy(projectDisplay.line2, des);
+    strcpy(projectDisplay.line3, date);
+    strcpy(projectDisplay.line4, duedate);
+    projectDisplay.line5 = numusers;
+    printf("Sending projects\n");
+    put(clntSocket, &projectDisplay, sizeof(struct menu));	
 }
 
 	
