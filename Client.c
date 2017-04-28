@@ -8,6 +8,12 @@
 #define RCVBUFSIZE 100   /* Size of receive buffer */
 #define NAME_SIZE 21 /*Includes room for null */
 
+struct menu{
+  unsigned char line1[20];
+  unsigned char line2[20];
+  unsigned char line3[20];
+};
+
 typedef struct{
   unsigned int x;
   unsigned int y;
@@ -19,18 +25,13 @@ typedef struct{
   unsigned int y;
 }DATA_TYPE;
 
-struct menu{
-  unsigned char line1[20];
-  unsigned char line2[20];
-  unsigned char line3[20];
-};
-
 void DieWithError(char *errorMessage);  /* Error handling function */
 void get(int, void *, unsigned int);
 void put(int, void *, unsigned int);
 void talkToServer(int);
 unsigned int displayMenuAndSendSelection(int);
-void sendName(int);
+void sendUserNameSignup(int);
+void sendPasswordSignup(int);
 void sendNumber(int);
 
 int main(int argc, char *argv[])
@@ -97,7 +98,8 @@ void talkToServer(int sock)
         switch(selection)
         {
             case 1:
-                sendName(sock);
+                sendUserNameSignup(sock);
+		sendPasswordSignup(sock);
                 break;
             case 2:
                 sendNumber(sock);
@@ -128,17 +130,30 @@ unsigned int displayMenuAndSendSelection(int sock)
     return response;
 }
 
-void sendName(int sock)
+void sendUserNameSignup(int sock)
 {
     unsigned char msg[21];
-    unsigned char name[NAME_SIZE];
+    unsigned char username[NAME_SIZE];
 
     memset(msg, 0, sizeof(msg));
     get(sock, msg, sizeof(msg));
     printf("%s\n", msg);
-    memset(name, 0, NAME_SIZE);
-    scanf("%s", name);
-    put(sock, name, NAME_SIZE);
+    memset(username, 0, NAME_SIZE);
+    scanf("%s", username);
+    put(sock, username, NAME_SIZE);
+}
+
+void sendPasswordSignup(int sock)
+{
+    unsigned char msg[21];
+    unsigned char password[NAME_SIZE];
+
+    memset(msg, 0, sizeof(msg));
+    get(sock, msg, sizeof(msg));
+    printf("%s\n", msg);
+    memset(password, 0, NAME_SIZE);
+    scanf("%s", password);
+    put(sock, password, NAME_SIZE);
 }
 
 void sendNumber(int sock)

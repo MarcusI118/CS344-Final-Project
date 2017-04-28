@@ -20,10 +20,12 @@ void HandleTCPClient(int clntSocket);   /* TCP client handling function */
 void get(int, void *, unsigned int);
 void put(int, void *, unsigned int);
 unsigned int sendMenuAndWaitForResponse(int);
-void askForName(int sock, char *, unsigned int);
-void doSomethingWithName(char *);
-void askForNumber(int sock, int *, unsigned int);
-void doSomethingWithNumber(int);
+
+
+
+void askForPasswordSignup(int sock, char *, unsigned int);
+void askForUsernameSignup(int , char * , unsigned int );
+void writeUserNameToFile(char *, char *);
 
 
 int main(int argc, char *argv[])
@@ -100,23 +102,26 @@ void HandleTCPClient(int clntSocket)
 {
     int recvMsgSize;                    /* Size of received message */
     unsigned int response = 0;
-    unsigned char name[NAME_SIZE]; //max length 20
-    int number = 0;
+
     unsigned char errorMsg[] = "Invalid Choice";
-    unsigned char bye[] = "Bye!";
+    unsigned char bye[] = "Exiting Work Project Tool!";
+
+    unsigned char userName[NAME_SIZE]; //max length 20
+    unsigned char userPassword[NAME_SIZE];
 
     response = sendMenuAndWaitForResponse(clntSocket);
     while(response != 3)
     {
         switch(response)
         {
-            case 1: printf("Client selected 1.\n");
-                    askForName(clntSocket, name, NAME_SIZE);
-                    doSomethingWithName(name);
+            case 1: printf("Enter Username\n");
+                    askForUsernameSignup(clntSocket, userName, NAME_SIZE);
+		    askForPasswordSignup(clntSocket,userPassword, NAME_SIZE);
+		    writeUserNameToFile(userName, userPassword);
                     break;
-            case 2: printf("Client selected 2.\n");
-                    askForNumber(clntSocket, &number, sizeof(int));
-                    doSomethingWithNumber(number);
+            case 2: printf("Sign-up\n");
+
+                    //doSomethingWithNumber(number);
                     break;
             default: printf("Client selected junk.\n"); put(clntSocket, errorMsg, sizeof(errorMsg)); break;
         }
@@ -133,45 +138,43 @@ unsigned int sendMenuAndWaitForResponse(int clntSocket)
     struct menu mainMenu;
     unsigned int response = 0;
     memset(&mainMenu, 0, sizeof(struct menu));   /* Zero out structure */
-    strcpy(mainMenu.line1,"1) Enter name\n");
-    strcpy(mainMenu.line2, "2) Enter number\n");
-    strcpy(mainMenu.line3, "3) Quit\n");
+    strcpy(mainMenu.line1,"1)Sign-up\n");
+    strcpy(mainMenu.line2, "2)Login\n");
+    strcpy(mainMenu.line3, "3)Quit\n");
     printf("Sending menu\n");
     put(clntSocket, &mainMenu, sizeof(struct menu));
     get(clntSocket, &response, sizeof(unsigned int));
     return ntohl(response);
 }
 
-void askForName(int sock, char * name, unsigned int size)
+
+void askForUsernameSignup(int sock, char * username, unsigned int size)
 {
     unsigned char msg[21];
     memset(msg, 0, sizeof(msg));
-    strcpy(msg, "Enter name:\n");
+    strcpy(msg, "Enter username\n");
     put(sock, msg, sizeof(msg));
-    memset(name, 0, NAME_SIZE);
-    get(sock, name, NAME_SIZE);
+    memset(username, 0, NAME_SIZE);
+    get(sock, username, NAME_SIZE);
 }
-
-void doSomethingWithName(char * name)
-{
-    printf("Received name from the client: %s\n", name);
-}
-
-void askForNumber(int sock, int * numPtr, unsigned int size)
+void askForPasswordSignup(int sock, char * password, unsigned int size)
 {
     unsigned char msg[21];
-    int numIn = 0;
-
     memset(msg, 0, sizeof(msg));
-    strcpy(msg, "Enter number:\n");
+    strcpy(msg, "Enter password\n");
     put(sock, msg, sizeof(msg));
-    get(sock, &numIn, sizeof(int));
-    *numPtr = ntohl(numIn);
+    memset(password, 0, NAME_SIZE);
+    get(sock, password, NAME_SIZE);
 }
 
-void doSomethingWithNumber(int number)
+void writeUserNameToFile(char * userName, char * userPassword)
 {
-    printf("Received number from the client: %d\n", number);
+	FILE *fp;
+	fp = fopen("Users.txt", "w+");
+	//fputs(userName,  fp);
+	fprintf(fp,"%s %s", userName, userPassword);
+	fclose(fp);
+
 }
 
 void put(int sock, void * buffer, unsigned int size)
