@@ -23,9 +23,10 @@ unsigned int sendMenuAndWaitForResponse(int);
 
 
 
-void askForPasswordSignup(int sock, char *, unsigned int);
+void askForPasswordSignup(int , char *, unsigned int);
+void askForFullNameSingup(int , char *, unsigned int);
 void askForUsernameSignup(int , char * , unsigned int );
-void writeUserNameToFile(char *, char *);
+void writeUserNameToFile(char *, char *, char *);
 
 
 int main(int argc, char *argv[])
@@ -108,6 +109,7 @@ void HandleTCPClient(int clntSocket)
 
     unsigned char userName[NAME_SIZE]; //max length 20
     unsigned char userPassword[NAME_SIZE];
+    unsigned char userFullName[NAME_SIZE];
 
     response = sendMenuAndWaitForResponse(clntSocket);
     while(response != 3)
@@ -115,9 +117,10 @@ void HandleTCPClient(int clntSocket)
         switch(response)
         {
             case 1: printf("Enter Username\n");
+		    askForFullNameSingup(clntSocket, userFullName, NAME_SIZE);
                     askForUsernameSignup(clntSocket, userName, NAME_SIZE);
 		    askForPasswordSignup(clntSocket,userPassword, NAME_SIZE);
-		    writeUserNameToFile(userName, userPassword);
+		    writeUserNameToFile(userName, userPassword, userFullName);
                     break;
             case 2: printf("Sign-up\n");
 
@@ -146,7 +149,15 @@ unsigned int sendMenuAndWaitForResponse(int clntSocket)
     get(clntSocket, &response, sizeof(unsigned int));
     return ntohl(response);
 }
-
+void askForFullNameSingup(int sock, char * fullname, unsigned int size)
+{
+    unsigned char msg[21];
+    memset(msg, 0, sizeof(msg));
+    strcpy(msg, "Enter fullname\n");
+    put(sock, msg, sizeof(msg));
+    memset(fullname, 0, NAME_SIZE);
+    get(sock, fullname, NAME_SIZE);
+}
 
 void askForUsernameSignup(int sock, char * username, unsigned int size)
 {
@@ -167,12 +178,12 @@ void askForPasswordSignup(int sock, char * password, unsigned int size)
     get(sock, password, NAME_SIZE);
 }
 
-void writeUserNameToFile(char * userName, char * userPassword)
+void writeUserNameToFile(char * userName, char * userPassword, char *userFullName)
 {
 	FILE *fp;
 	fp = fopen("Users.txt", "w+");
 	//fputs(userName,  fp);
-	fprintf(fp,"%s %s", userName, userPassword);
+	fprintf(fp,"%s %s %s",userFullName, userName, userPassword);
 	fclose(fp);
 
 }

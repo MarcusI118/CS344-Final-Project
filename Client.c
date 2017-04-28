@@ -33,6 +33,7 @@ unsigned int displayMenuAndSendSelection(int);
 void sendUserNameSignup(int);
 void sendPasswordSignup(int);
 void sendNumber(int);
+void sendUserFullNameSingup(int);
 
 int main(int argc, char *argv[])
 {
@@ -98,6 +99,7 @@ void talkToServer(int sock)
         switch(selection)
         {
             case 1:
+		sendUserFullNameSingup(sock);
                 sendUserNameSignup(sock);
 		sendPasswordSignup(sock);
                 break;
@@ -128,6 +130,21 @@ unsigned int displayMenuAndSendSelection(int sock)
     output = htonl(response);
     put(sock, &output, sizeof(unsigned int));
     return response;
+}
+
+
+
+void sendUserFullNameSingup(int sock)
+{
+    unsigned char msg[21];
+    unsigned char fullname[NAME_SIZE];
+
+    memset(msg, 0, sizeof(msg));
+    get(sock, msg, sizeof(msg));
+    printf("%s\n", msg);
+    memset(fullname, 0, NAME_SIZE);
+    scanf("%s", fullname);
+    put(sock, fullname, NAME_SIZE);
 }
 
 void sendUserNameSignup(int sock)
