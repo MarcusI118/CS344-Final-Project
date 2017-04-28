@@ -30,10 +30,15 @@ void get(int, void *, unsigned int);
 void put(int, void *, unsigned int);
 void talkToServer(int);
 unsigned int displayMenuAndSendSelection(int);
+
 void sendUserNameSignup(int);
 void sendPasswordSignup(int);
-void sendNumber(int);
 void sendUserFullNameSingup(int);
+
+
+
+void sendUsernameLogin(int);
+void sendPasswordLogin(int);
 
 int main(int argc, char *argv[])
 {
@@ -104,7 +109,8 @@ void talkToServer(int sock)
 		sendPasswordSignup(sock);
                 break;
             case 2:
-                sendNumber(sock);
+                sendUsernameLogin(sock);
+	        sendPasswordLogin(sock);
                 break;
             }
         if(selection == 3) break;
@@ -173,17 +179,30 @@ void sendPasswordSignup(int sock)
     put(sock, password, NAME_SIZE);
 }
 
-void sendNumber(int sock)
+void sendUsernameLogin(int sock)
 {
     unsigned char msg[21];
-    int number;
+    unsigned char username_l[NAME_SIZE];
 
     memset(msg, 0, sizeof(msg));
     get(sock, msg, sizeof(msg));
     printf("%s\n", msg);
-    scanf("%d", &number);
-    number = htonl(number);
-    put(sock, &number, sizeof(int));
+    memset(username_l, 0, NAME_SIZE);
+    scanf("%s", username_l);
+    put(sock, username_l, NAME_SIZE);
+}
+
+void sendPasswordLogin(int sock)
+{
+    unsigned char msg[21];
+    unsigned char password_l[NAME_SIZE];
+
+    memset(msg, 0, sizeof(msg));
+    get(sock, msg, sizeof(msg));
+    printf("%s\n", msg);
+    memset(password_l, 0, NAME_SIZE);
+    scanf("%s", password_l);
+    put(sock, password_l, NAME_SIZE);
 }
 void get(int sock, void * buffer, unsigned int size)
 {

@@ -28,6 +28,11 @@ void askForFullNameSingup(int , char *, unsigned int);
 void askForUsernameSignup(int , char * , unsigned int );
 void writeUserNameToFile(char *, char *, char *);
 
+void askForUsernameLogin(int, char *, unsigned int);
+void askForPasswordLogin(int, char *, unsigned int);
+
+int logedIn(char *, char *);
+
 
 int main(int argc, char *argv[])
 {
@@ -107,24 +112,33 @@ void HandleTCPClient(int clntSocket)
     unsigned char errorMsg[] = "Invalid Choice";
     unsigned char bye[] = "Exiting Work Project Tool!";
 
-    unsigned char userName[NAME_SIZE]; //max length 20
+    unsigned char userName[NAME_SIZE]; 
     unsigned char userPassword[NAME_SIZE];
     unsigned char userFullName[NAME_SIZE];
+
+    unsigned char userNameLogin[NAME_SIZE]; 
+    unsigned char userPasswordLogin[NAME_SIZE];
+
+    int success;
+
+
 
     response = sendMenuAndWaitForResponse(clntSocket);
     while(response != 3)
     {
         switch(response)
         {
-            case 1: printf("Enter Username\n");
+            case 1: printf("Sing-up\n");
 		    askForFullNameSingup(clntSocket, userFullName, NAME_SIZE);
                     askForUsernameSignup(clntSocket, userName, NAME_SIZE);
 		    askForPasswordSignup(clntSocket,userPassword, NAME_SIZE);
 		    writeUserNameToFile(userName, userPassword, userFullName);
                     break;
-            case 2: printf("Sign-up\n");
-
-                    //doSomethingWithNumber(number);
+            case 2: printf("Log-in\n");
+		    askForUsernameLogin(clntSocket, userNameLogin, NAME_SIZE);
+		    askForPasswordLogin(clntSocket, userPasswordLogin, NAME_SIZE);
+		    success = logedIn(userNameLogin, userPasswordLogin)
+	
                     break;
             default: printf("Client selected junk.\n"); put(clntSocket, errorMsg, sizeof(errorMsg)); break;
         }
@@ -178,16 +192,63 @@ void askForPasswordSignup(int sock, char * password, unsigned int size)
     get(sock, password, NAME_SIZE);
 }
 
+
+
+void askForUsernameLogin(int sock, char * username_l, unsigned int size)
+{
+    unsigned char msg[21];
+    memset(msg, 0, sizeof(msg));
+    strcpy(msg, "Enter username\n");
+    put(sock, msg, sizeof(msg));
+    memset(username_l, 0, NAME_SIZE);
+    get(sock, username_l, NAME_SIZE);
+}
+void askForPasswordLogin(int sock, char * password_l, unsigned int size)
+{
+    unsigned char msg[21];
+    memset(msg, 0, sizeof(msg));
+    strcpy(msg, "Enter password\n");
+    put(sock, msg, sizeof(msg));
+    memset(password_l, 0, NAME_SIZE);
+    get(sock, password_l, NAME_SIZE);
+}
+
+
 void writeUserNameToFile(char * userName, char * userPassword, char *userFullName)
 {
 	FILE *fp;
 	fp = fopen("Users.txt", "w+");
 	//fputs(userName,  fp);
-	fprintf(fp,"%s %s %s",userFullName, userName, userPassword);
+	fprintf(fp,"%s %s %s",userName, userPassword, userFullName);
 	fclose(fp);
 
 }
 
+int logedIn(char * userAuth, char * passAuth)
+{
+
+	FILE *fp;
+	fp = fopen("Users.txt", "r");
+	
+	char passCheck[NAME_SIZE];
+	char userCheck[NAME_SIZE];
+	
+	
+	char line[NAME_SIZE];
+	while(fgets(line, sizeof(line), fp))
+	{
+		printf("file line: %s", line);
+		sscanf("%s %s", userCheck, passCheck);
+		if(strcmp(userCheck, userAuth) == 0 && strcmp(passCheck, passAuth) == 0);
+	
+		{	return 1;
+			break; 
+			
+		}
+	}
+	fclose(fp);
+}
+	
 void put(int sock, void * buffer, unsigned int size)
 {
     if (send(sock, buffer, size, 0) != size)
