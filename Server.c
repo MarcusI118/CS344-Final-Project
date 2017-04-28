@@ -33,7 +33,7 @@ void writeUserNameToFile(char *, char *, char *);
 void askForUsernameLogin(int, char *, unsigned int);
 void askForPasswordLogin(int, char *, unsigned int);
 
-void askForProjectInfo(int, char *, char *, char *, char *);
+void askForProjectInfo(int, char *, char *, char *, char *, int *);
 int logedIn(char *, char *);
 
 
@@ -164,6 +164,7 @@ void HandleTCPClientAuth(int clntSocket)
     unsigned char projectDescription[1000];
     unsigned char projectDate[8];
     unsigned char projectDueDate[8];
+    int numUsers;
     
     unsigned char bye[] = "Exiting Work Project Tool!";
 	
@@ -173,8 +174,8 @@ void HandleTCPClientAuth(int clntSocket)
         switch(response)
         {
             case 1: printf("Add \n");
-		    askForProjectInfo(clntSocket, projectName, projectDescription, projectDate, projectDueDate);
-	            printf("%s %s %s %s ", projectName,projectDescription, projectDate, projectDueDate);
+		    askForProjectInfo(clntSocket, projectName, projectDescription, projectDate, projectDueDate, &numUsers);
+	            printf("%s %s %s %s %d", projectName,projectDescription, projectDate, projectDueDate, numUsers);
                     break;
             case 2: printf("Delete\n");
 
@@ -191,10 +192,11 @@ void HandleTCPClientAuth(int clntSocket)
 }
 
 
-void askForProjectInfo(int sock, char * projectName, char * projectDescription, char * projectDate, char * projectDueDate)
+void askForProjectInfo(int sock, char * projectName, char * projectDescription, char * projectDate, char * projectDueDate, int * numUsers)
 {
 
 	unsigned char msg[21];
+	int numIn = 0;
 
 	memset(msg, 0, sizeof(msg));
 	strcpy(msg, "Project Name");
@@ -220,6 +222,14 @@ void askForProjectInfo(int sock, char * projectName, char * projectDescription, 
 	put(sock, msg, sizeof(msg));
 	memset(projectDueDate, 0, 8);
 	get(sock, projectDueDate, 8);
+
+	memset(msg, 0, sizeof(msg));
+	strcpy(msg, "Num Users");
+	put(sock, msg, sizeof(msg));
+	get(sock, &numIn, sizeof(int));
+	
+	*numUsers = ntohl(numIn);
+	
 	
 }
 

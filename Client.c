@@ -176,6 +176,8 @@ void sendProjectInfo(int sock)
 	unsigned char projectDescrption[1000];
 	unsigned char projectDueDate[8];
 	unsigned char projectDate[8];
+	int numUsers;
+	int numIn;
 
 	memset(msg, 0, sizeof(msg));
 	get(sock, msg, sizeof(msg));
@@ -200,6 +202,13 @@ void sendProjectInfo(int sock)
 	printf("%s\n", msg);
 	scanf("%s", projectDueDate);
 	put(sock, projectDueDate, 8); 
+
+	memset(msg, 0, sizeof(msg));
+	get(sock, msg, sizeof(msg));
+	printf("%s\n", msg);
+	scanf("%d", &numUsers);
+        numIn = htonl(numUsers);
+	put(sock, &numIn, sizeof(int));
 }
 
 
