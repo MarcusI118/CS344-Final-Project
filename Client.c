@@ -6,7 +6,7 @@
 #include <unistd.h>     /* for close() */
 
 #define RCVBUFSIZE 100   /* Size of receive buffer */
-#define NAME_SIZE 21 /*Includes room for null */
+#define MAX_SIZE 51 /*Includes room for null */
 
 struct menu{
   unsigned char line1[20];
@@ -29,6 +29,7 @@ void DieWithError(char *errorMessage);  /* Error handling function */
 void get(int, void *, unsigned int);
 void put(int, void *, unsigned int);
 void talkToServer(int);
+void talkToAuthServer(int);
 unsigned int displayMenuAndSendSelection(int);
 
 void sendUserNameSignup(int);
@@ -111,6 +112,7 @@ void talkToServer(int sock)
             case 2:
                 sendUsernameLogin(sock);
 	        sendPasswordLogin(sock);
+		talkToAuthServer(sock);
                 break;
             }
         if(selection == 3) break;
@@ -120,6 +122,33 @@ void talkToServer(int sock)
     get(sock, bye, 5);
     printf("%s\n", bye);
 }
+
+
+void talkToAuthServer(int sock)
+{
+    unsigned int selection = 0;
+    unsigned char bye[5];
+
+    while(1)
+    {
+        selection = displayMenuAndSendSelection(sock);
+        printf("Client selected: %d\n", selection);
+        switch(selection)
+        {
+            case 1:
+
+                break;
+            case 2:
+                break;
+            }
+        if(selection == 3) break;
+    }
+    selection = htonl(selection);
+    put(sock, &selection, sizeof(unsigned int));
+    get(sock, bye, 5);
+    printf("%s\n", bye);
+}
+
 
 unsigned int displayMenuAndSendSelection(int sock)
 {
@@ -143,66 +172,66 @@ unsigned int displayMenuAndSendSelection(int sock)
 void sendUserFullNameSingup(int sock)
 {
     unsigned char msg[21];
-    unsigned char fullname[NAME_SIZE];
+    unsigned char fullname[MAX_SIZE];
 
     memset(msg, 0, sizeof(msg));
     get(sock, msg, sizeof(msg));
     printf("%s\n", msg);
-    memset(fullname, 0, NAME_SIZE);
+    memset(fullname, 0, MAX_SIZE);
     scanf("%s", fullname);
-    put(sock, fullname, NAME_SIZE);
+    put(sock, fullname, MAX_SIZE);
 }
 
 void sendUserNameSignup(int sock)
 {
     unsigned char msg[21];
-    unsigned char username[NAME_SIZE];
+    unsigned char username[MAX_SIZE];
 
     memset(msg, 0, sizeof(msg));
     get(sock, msg, sizeof(msg));
     printf("%s\n", msg);
-    memset(username, 0, NAME_SIZE);
+    memset(username, 0, MAX_SIZE);
     scanf("%s", username);
-    put(sock, username, NAME_SIZE);
+    put(sock, username, MAX_SIZE);
 }
 
 void sendPasswordSignup(int sock)
 {
     unsigned char msg[21];
-    unsigned char password[NAME_SIZE];
+    unsigned char password[MAX_SIZE];
 
     memset(msg, 0, sizeof(msg));
     get(sock, msg, sizeof(msg));
     printf("%s\n", msg);
-    memset(password, 0, NAME_SIZE);
+    memset(password, 0, MAX_SIZE);
     scanf("%s", password);
-    put(sock, password, NAME_SIZE);
+    put(sock, password, MAX_SIZE);
 }
 
 void sendUsernameLogin(int sock)
 {
     unsigned char msg[21];
-    unsigned char username_l[NAME_SIZE];
+    unsigned char username_l[MAX_SIZE];
 
     memset(msg, 0, sizeof(msg));
     get(sock, msg, sizeof(msg));
     printf("%s\n", msg);
-    memset(username_l, 0, NAME_SIZE);
+    memset(username_l, 0, MAX_SIZE);
     scanf("%s", username_l);
-    put(sock, username_l, NAME_SIZE);
+    put(sock, username_l, MAX_SIZE);
 }
 
 void sendPasswordLogin(int sock)
 {
     unsigned char msg[21];
-    unsigned char password_l[NAME_SIZE];
+    unsigned char password_l[MAX_SIZE];
 
     memset(msg, 0, sizeof(msg));
     get(sock, msg, sizeof(msg));
     printf("%s\n", msg);
-    memset(password_l, 0, NAME_SIZE);
+    memset(password_l, 0, MAX_SIZE);
     scanf("%s", password_l);
-    put(sock, password_l, NAME_SIZE);
+    put(sock, password_l, MAX_SIZE);
 }
 void get(int sock, void * buffer, unsigned int size)
 {

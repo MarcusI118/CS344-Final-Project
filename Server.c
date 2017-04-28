@@ -7,7 +7,7 @@
 
 #define MAXPENDING 5    /* Maximum outstanding connection requests */
 #define RCVBUFSIZE 32   /* Size of receive buffer */
-#define NAME_SIZE 21 /*Includes room for null */
+#define MAX_SIZE 51 /*Includes room for null */
 
 struct menu{
   unsigned char line1[20];
@@ -20,6 +20,10 @@ void HandleTCPClient(int clntSocket);   /* TCP client handling function */
 void get(int, void *, unsigned int);
 void put(int, void *, unsigned int);
 unsigned int sendMenuAndWaitForResponse(int);
+
+unsigned int sendMenuAuth(int);
+
+void HandleTCPClientAuth(int);
 
 
 
@@ -112,34 +116,32 @@ void HandleTCPClient(int clntSocket)
     unsigned char errorMsg[] = "Invalid Choice";
     unsigned char bye[] = "Exiting Work Project Tool!";
 
-    unsigned char userName[NAME_SIZE]; 
-    unsigned char userPassword[NAME_SIZE];
-    unsigned char userFullName[NAME_SIZE];
+    unsigned char userName[MAX_SIZE]; 
+    unsigned char userPassword[MAX_SIZE];
+    unsigned char userFullName[MAX_SIZE];
 
-    unsigned char userNameLogin[NAME_SIZE]; 
-    unsigned char userPasswordLogin[NAME_SIZE];
+    unsigned char userNameLogin[MAX_SIZE]; 
+    unsigned char userPasswordLogin[MAX_SIZE];
 
     int success;
-
-
 
     response = sendMenuAndWaitForResponse(clntSocket);
     while(response != 3)
     {
         switch(response)
         {
-            case 1: printf("Sing-up\n");
-		    askForFullNameSingup(clntSocket, userFullName, NAME_SIZE);
-                    askForUsernameSignup(clntSocket, userName, NAME_SIZE);
-		    askForPasswordSignup(clntSocket,userPassword, NAME_SIZE);
+            case 1: printf("Sign-up\n");
+		    askForFullNameSingup(clntSocket, userFullName, MAX_SIZE);
+                    askForUsernameSignup(clntSocket, userName, MAX_SIZE);
+		    askForPasswordSignup(clntSocket,userPassword, MAX_SIZE);
 		    writeUserNameToFile(userName, userPassword, userFullName);
                     break;
             case 2: printf("Log-in\n");
-		    askForUsernameLogin(clntSocket, userNameLogin, NAME_SIZE);
-		    askForPasswordLogin(clntSocket, userPasswordLogin, NAME_SIZE);
+		    askForUsernameLogin(clntSocket, userNameLogin, MAX_SIZE);
+		    askForPasswordLogin(clntSocket, userPasswordLogin, MAX_SIZE);
 		    success = logedIn(userNameLogin, userPasswordLogin);
 		    if(success == 1)
-			printf("good");
+			HandleTCPClientAuth(clntSocket);
 			if(success ==0)
 				printf("bad");
 
@@ -154,6 +156,48 @@ void HandleTCPClient(int clntSocket)
     printf("Connection with client %d closed.\n", clntSocket);
 }
 
+void HandleTCPClientAuth(int clntSocket)
+{
+    int recvMsgSize;                    /* Size of received message */
+    unsigned int response = 0;
+
+    unsigned char errorMsg[] = "Invalid Choice";
+    unsigned char bye[] = "Exiting Work Project Tool!";
+
+    response = sendMenuAuth(clntSocket);
+    while(response != 3)
+    {
+        switch(response)
+        {
+            case 1: printf("Add \n");
+	
+                    break;
+            case 2: printf("Delete\n");
+
+                    break;
+            default: printf("Client selected junk.\n"); put(clntSocket, errorMsg, sizeof(errorMsg)); break;
+        }
+        response = sendMenuAuth(clntSocket);
+    }//end while
+
+    put(clntSocket, bye, sizeof(bye));
+    close(clntSocket);    /* Close client socket */
+    printf("Connection with client %d closed.\n", clntSocket);
+}
+
+unsigned int sendMenuAuth(int clntSocket)
+{
+    struct menu projectMenu;
+    unsigned int response = 0;
+    memset(&projectMenu, 0, sizeof(struct menu));   /* Zero out structure */
+    strcpy(projectMenu.line1,"1)Add\n");
+    strcpy(projectMenu.line2, "2)Delete\n");
+    strcpy(projectMenu.line3, "3)Quit\n");
+    printf("Sending menu\n");
+    put(clntSocket, &projectMenu, sizeof(struct menu));
+    get(clntSocket, &response, sizeof(unsigned int));
+    return ntohl(response);	
+}
 unsigned int sendMenuAndWaitForResponse(int clntSocket)
 {
     struct menu mainMenu;
@@ -173,8 +217,8 @@ void askForFullNameSingup(int sock, char * fullname, unsigned int size)
     memset(msg, 0, sizeof(msg));
     strcpy(msg, "Enter fullname\n");
     put(sock, msg, sizeof(msg));
-    memset(fullname, 0, NAME_SIZE);
-    get(sock, fullname, NAME_SIZE);
+    memset(fullname, 0, MAX_SIZE);
+    get(sock, fullname, MAX_SIZE);
 }
 
 void askForUsernameSignup(int sock, char * username, unsigned int size)
@@ -183,8 +227,8 @@ void askForUsernameSignup(int sock, char * username, unsigned int size)
     memset(msg, 0, sizeof(msg));
     strcpy(msg, "Enter username\n");
     put(sock, msg, sizeof(msg));
-    memset(username, 0, NAME_SIZE);
-    get(sock, username, NAME_SIZE);
+    memset(username, 0, MAX_SIZE);
+    get(sock, username, MAX_SIZE);
 }
 void askForPasswordSignup(int sock, char * password, unsigned int size)
 {
@@ -192,8 +236,8 @@ void askForPasswordSignup(int sock, char * password, unsigned int size)
     memset(msg, 0, sizeof(msg));
     strcpy(msg, "Enter password\n");
     put(sock, msg, sizeof(msg));
-    memset(password, 0, NAME_SIZE);
-    get(sock, password, NAME_SIZE);
+    memset(password, 0, MAX_SIZE);
+    get(sock, password, MAX_SIZE);
 }
 
 
@@ -204,8 +248,8 @@ void askForUsernameLogin(int sock, char * username_l, unsigned int size)
     memset(msg, 0, sizeof(msg));
     strcpy(msg, "Enter username\n");
     put(sock, msg, sizeof(msg));
-    memset(username_l, 0, NAME_SIZE);
-    get(sock, username_l, NAME_SIZE);
+    memset(username_l, 0, MAX_SIZE);
+    get(sock, username_l, MAX_SIZE);
 }
 void askForPasswordLogin(int sock, char * password_l, unsigned int size)
 {
@@ -213,8 +257,8 @@ void askForPasswordLogin(int sock, char * password_l, unsigned int size)
     memset(msg, 0, sizeof(msg));
     strcpy(msg, "Enter password\n");
     put(sock, msg, sizeof(msg));
-    memset(password_l, 0, NAME_SIZE);
-    get(sock, password_l, NAME_SIZE);
+    memset(password_l, 0, MAX_SIZE);
+    get(sock, password_l, MAX_SIZE);
 }
 
 
@@ -233,11 +277,11 @@ int logedIn(char * userAuth, char * passAuth)
 	FILE *fp;
 	fp = fopen("Users.txt", "r");
 	
-	char passCheck[NAME_SIZE];
-	char userCheck[NAME_SIZE];
+	char passCheck[MAX_SIZE];
+	char userCheck[MAX_SIZE];
 	
 	
-	char line[NAME_SIZE];
+	char line[MAX_SIZE];
 	while(fgets(line, sizeof(line), fp) != NULL)
 	{
 		sscanf(line, "%s %s", userCheck, passCheck);
