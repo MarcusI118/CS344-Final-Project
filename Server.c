@@ -138,9 +138,11 @@ void HandleTCPClient(int clntSocket)
 		    askForUsernameLogin(clntSocket, userNameLogin, NAME_SIZE);
 		    askForPasswordLogin(clntSocket, userPasswordLogin, NAME_SIZE);
 		    success = logedIn(userNameLogin, userPasswordLogin);
-			printf("success %d", success);
-	
-	
+		    if(success == 1)
+			printf("good");
+			if(success ==0)
+				printf("bad");
+
                     break;
             default: printf("Client selected junk.\n"); put(clntSocket, errorMsg, sizeof(errorMsg)); break;
         }
@@ -228,7 +230,6 @@ void writeUserNameToFile(char * userName, char * userPassword, char *userFullNam
 
 int logedIn(char * userAuth, char * passAuth)
 {
-
 	FILE *fp;
 	fp = fopen("Users.txt", "r");
 	
@@ -239,16 +240,13 @@ int logedIn(char * userAuth, char * passAuth)
 	char line[NAME_SIZE];
 	while(fgets(line, sizeof(line), fp) != NULL)
 	{
-		printf("file line: %s", line);
 		sscanf(line, "%s %s", userCheck, passCheck);
 		if(strcmp(userCheck, userAuth) == 0 && strcmp(passCheck, passAuth) == 0)	
 		{
 			fclose(fp);	
 			return 1;
-			break; 
-			
+			break; 		
 		}
-		printf("check u %s check p %s", userCheck, passCheck);
 	}
 }
 
