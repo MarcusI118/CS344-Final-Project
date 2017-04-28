@@ -137,7 +137,9 @@ void HandleTCPClient(int clntSocket)
             case 2: printf("Log-in\n");
 		    askForUsernameLogin(clntSocket, userNameLogin, NAME_SIZE);
 		    askForPasswordLogin(clntSocket, userPasswordLogin, NAME_SIZE);
-		    success = logedIn(userNameLogin, userPasswordLogin)
+		    success = logedIn(userNameLogin, userPasswordLogin);
+			printf("success %d", success);
+	
 	
                     break;
             default: printf("Client selected junk.\n"); put(clntSocket, errorMsg, sizeof(errorMsg)); break;
@@ -235,19 +237,21 @@ int logedIn(char * userAuth, char * passAuth)
 	
 	
 	char line[NAME_SIZE];
-	while(fgets(line, sizeof(line), fp))
+	while(fgets(line, sizeof(line), fp) != NULL)
 	{
 		printf("file line: %s", line);
-		sscanf("%s %s", userCheck, passCheck);
-		if(strcmp(userCheck, userAuth) == 0 && strcmp(passCheck, passAuth) == 0);
-	
-		{	return 1;
+		sscanf(line, "%s %s", userCheck, passCheck);
+		if(strcmp(userCheck, userAuth) == 0 && strcmp(passCheck, passAuth) == 0)	
+		{
+			fclose(fp);	
+			return 1;
 			break; 
 			
 		}
+		printf("check u %s check p %s", userCheck, passCheck);
 	}
-	fclose(fp);
 }
+
 	
 void put(int sock, void * buffer, unsigned int size)
 {
