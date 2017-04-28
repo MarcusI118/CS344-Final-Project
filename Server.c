@@ -22,7 +22,6 @@ void put(int, void *, unsigned int);
 unsigned int sendMenuAndWaitForResponse(int);
 
 unsigned int sendMenuAuth(int);
-
 void HandleTCPClientAuth(int);
 
 
@@ -31,10 +30,10 @@ void askForPasswordSignup(int , char *, unsigned int);
 void askForFullNameSingup(int , char *, unsigned int);
 void askForUsernameSignup(int , char * , unsigned int );
 void writeUserNameToFile(char *, char *, char *);
-
 void askForUsernameLogin(int, char *, unsigned int);
 void askForPasswordLogin(int, char *, unsigned int);
 
+void askForProjectInfo(int, char *, char *, char *, char *);
 int logedIn(char *, char *);
 
 
@@ -148,7 +147,7 @@ void HandleTCPClient(int clntSocket)
                     break;
             default: printf("Client selected junk.\n"); put(clntSocket, errorMsg, sizeof(errorMsg)); break;
         }
-        response = sendMenuAndWaitForResponse(clntSocket);
+        response = sendMenuAndWaitForResponse(clntSocket);//add sign
     }//end while
 
     put(clntSocket, bye, sizeof(bye));
@@ -161,28 +160,67 @@ void HandleTCPClientAuth(int clntSocket)
     int recvMsgSize;                    /* Size of received message */
     unsigned int response = 0;
 
-    unsigned char errorMsg[] = "Invalid Choice";
+    unsigned char projectName[100];
+    unsigned char projectDescription[1000];
+    unsigned char projectDate[8];
+    unsigned char projectDueDate[8];
+    
     unsigned char bye[] = "Exiting Work Project Tool!";
-
+	
     response = sendMenuAuth(clntSocket);
     while(response != 3)
     {
         switch(response)
         {
             case 1: printf("Add \n");
-	
+		    askForProjectInfo(clntSocket, projectName, projectDescription, projectDate, projectDueDate);
+	            printf("%s %s %s %s ", projectName,projectDescription, projectDate, projectDueDate);
                     break;
             case 2: printf("Delete\n");
 
                     break;
-            default: printf("Client selected junk.\n"); put(clntSocket, errorMsg, sizeof(errorMsg)); break;
+            default: 
+	    break; 
         }
         response = sendMenuAuth(clntSocket);
-    }//end while
+    }
 
     put(clntSocket, bye, sizeof(bye));
-    close(clntSocket);    /* Close client socket */
+    close(clntSocket); 
     printf("Connection with client %d closed.\n", clntSocket);
+}
+
+
+void askForProjectInfo(int sock, char * projectName, char * projectDescription, char * projectDate, char * projectDueDate)
+{
+
+	unsigned char msg[21];
+
+	memset(msg, 0, sizeof(msg));
+	strcpy(msg, "Project Name");
+	put(sock, msg, sizeof(msg));
+	memset(projectName, 0, 100);
+	get(sock, projectName, 100);
+
+	memset(msg, 0, sizeof(msg));
+	strcpy(msg, "Project Description");
+	put(sock, msg, sizeof(msg));
+	memset(projectDescription, 0, 100);
+	get(sock, projectDescription, 100);
+
+	memset(msg, 0, sizeof(msg));
+	strcpy(msg, "Project Date");
+	put(sock, msg, sizeof(msg));
+	memset(projectDate, 0, 8);
+	get(sock, projectDate, 8);
+
+
+	memset(msg, 0, sizeof(msg));
+	strcpy(msg, "Project Due Date");
+	put(sock, msg, sizeof(msg));
+	memset(projectDueDate, 0, 8);
+	get(sock, projectDueDate, 8);
+	
 }
 
 unsigned int sendMenuAuth(int clntSocket)
@@ -239,7 +277,6 @@ void askForPasswordSignup(int sock, char * password, unsigned int size)
     memset(password, 0, MAX_SIZE);
     get(sock, password, MAX_SIZE);
 }
-
 
 
 void askForUsernameLogin(int sock, char * username_l, unsigned int size)

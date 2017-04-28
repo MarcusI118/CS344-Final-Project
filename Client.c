@@ -36,6 +36,8 @@ void sendUserNameSignup(int);
 void sendPasswordSignup(int);
 void sendUserFullNameSingup(int);
 
+void sendProjectInfo(int);
+
 
 
 void sendUsernameLogin(int);
@@ -136,7 +138,7 @@ void talkToAuthServer(int sock)
         switch(selection)
         {
             case 1:
-
+		sendProjectInfo(sock);
                 break;
             case 2:
                 break;
@@ -167,6 +169,38 @@ unsigned int displayMenuAndSendSelection(int sock)
     return response;
 }
 
+void sendProjectInfo(int sock)
+{
+	unsigned char msg[21];
+	unsigned char projectName[100];
+	unsigned char projectDescrption[1000];
+	unsigned char projectDueDate[8];
+	unsigned char projectDate[8];
+
+	memset(msg, 0, sizeof(msg));
+	get(sock, msg, sizeof(msg));
+	printf("%s\n", msg);
+	scanf("%s", projectName);
+	put(sock, projectName, 100);
+	
+	memset(msg, 0, sizeof(msg));
+	get(sock, msg, sizeof(msg));
+	printf("%s\n", msg);
+	scanf("%s", projectDescrption);
+	put(sock, projectDescrption, 100); 
+
+	memset(msg, 0, sizeof(msg));
+	get(sock, msg, sizeof(msg));
+	printf("%s\n", msg);
+	scanf("%s", projectDate);
+	put(sock, projectDate, 8);
+	
+	memset(msg, 0, sizeof(msg));
+	get(sock, msg, sizeof(msg));
+	printf("%s\n", msg);
+	scanf("%s", projectDueDate);
+	put(sock, projectDueDate, 8); 
+}
 
 
 void sendUserFullNameSingup(int sock)
