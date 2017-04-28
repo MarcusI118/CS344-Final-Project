@@ -55,7 +55,10 @@ int logedIn(char *, char *);
 DataInList * appendToList(DataInList *, char[], char [], char [], char [], int);
 void editList(DataInList *, char[], char [], char [], char [], int);
 void displayList(DataInList *);
-void sendProjects(int, char *, char *, char *, char *, int);
+
+void testList(char * , char * , char * , char * , int, int);
+
+void sendList(int, DataInList*);
 
 int main(int argc, char *argv[])
 {
@@ -207,7 +210,7 @@ void HandleTCPClientAuth(int clntSocket)
 	    case 3: printf("Quit");
                     break;
 	    case 4: printf("View");
-		displayList(LinkedList);
+		    sendList(clntSocket,LinkedList);
 		break;
             default: 
 	    break; 
@@ -433,32 +436,31 @@ void displayList(DataInList *head)
 	printf("\n");
 }
 
-/*void sendList(DataInList *head, int sock)
+
+void sendList(int socket, DataInList *head)
 {
 	printf("Projects\n");
 	while(head != NULL)
 	{
-		printf("Name:%s Description:%s Date:%s Due Date:%s Users:%d\n\n", head->projectname, head->projectdescription, head->date, head->duedate, head->numusers);
+		testList(head->projectname, head->projectdescription, head->date, head->duedate, head->numusers, socket);
 		head = head->next;
-		//sendProjects(sock, head->projectname, head->projectdescription, head->date, head->duedate, head->numusers);
 
 	}
-	printf("\n");
-}*/
+}
 
-void sendProjects(int clntSocket, char * name, char * des, char * date, char * duedate, int numusers)
+void testList(char * name, char * des, char * date, char * due, int num, int sock)
 {
-    struct project projectDisplay;
+	printf("%s %s %s %s %d", name, des, date, due, num);
+
+   struct project projectDisplay;
     memset(&projectDisplay, 0, sizeof(struct project));   /* Zero out structure */
     strcpy(projectDisplay.line1,name);
     strcpy(projectDisplay.line2, des);
     strcpy(projectDisplay.line3, date);
-    strcpy(projectDisplay.line4, duedate);
-    projectDisplay.line5 = numusers;
-    printf("Sending projects\n");
-    put(clntSocket, &projectDisplay, sizeof(struct menu));	
+    strcpy(projectDisplay.line4, due);
+    projectDisplay.line5 = num;
+    put(sock, &projectDisplay, sizeof(struct project));
 }
-
 	
 void put(int sock, void * buffer, unsigned int size)
 {

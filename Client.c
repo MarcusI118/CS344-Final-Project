@@ -169,15 +169,15 @@ void talkToAuthServer(int sock)
 
 void viewList(int sock)
 {
-    struct project projectBuffer;     /* Buffer for echo string */
+    struct project projectDisplay;     /* Buffer for echo string */
 
     printf("Projects: \n");
-    get(sock, &projectBuffer, sizeof(struct project)); 
-    printf("%s\n", projectBuffer.line1);
-    printf("%s\n", projectBuffer.line2);
-    printf("%s\n", projectBuffer.line3);
-    printf("%s\n", projectBuffer.line4); 
-    printf("%d\n", projectBuffer.line5);
+    get(sock, &projectDisplay, sizeof(struct project)); 
+    printf("%s\n", projectDisplay.line1);
+    printf("%s\n", projectDisplay.line2);
+    printf("%s\n", projectDisplay.line3);
+    printf("%s\n", projectDisplay.line4); 
+    printf("%d\n", projectDisplay.line5);
 }
 
 unsigned int displayMenuAndSendSelection(int sock)
