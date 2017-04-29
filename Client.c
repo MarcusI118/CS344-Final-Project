@@ -14,6 +14,7 @@ struct menu
   unsigned char line2[20];
   unsigned char line3[20];
   unsigned char line4[20];
+  unsigned char line5[20];
 };
 
 struct project
@@ -50,9 +51,11 @@ void sendUserFullNameSingup(int);
 
 void sendProjectInfo(int);
 
-void viewList(int);
+void askForList(int);
 void sendUsernameLogin(int);
 void sendPasswordLogin(int);
+
+void sendSearch(int);
 
 int main(int argc, char *argv[])
 {
@@ -155,7 +158,11 @@ void talkToAuthServer(int sock)
 		sendProjectInfo(sock);
                 break;
 	   case 4:
-		viewList(sock);
+		sendSearch(sock);
+		askForList(sock);
+		break;
+	   case 5: 
+		sendProjectInfo(sock);
 		break;
             }
         if(selection == 3) break;
@@ -166,19 +173,29 @@ void talkToAuthServer(int sock)
     printf("%s\n", bye);
 }
 
+void askForList(int sock)
+{    
+	unsigned char msg[21];
 
-void viewList(int sock)
-{
-    struct project projectDisplay;     /* Buffer for echo string */
+	memset(msg, 0, sizeof(msg));
+	strcpy(msg, "Projects");
+	put(sock, msg, sizeof(msg));
 
-    printf("Projects: \n");
-    get(sock, &projectDisplay, sizeof(struct project)); 
-    printf("%s\n", projectDisplay.line1);
-    printf("%s\n", projectDisplay.line2);
-    printf("%s\n", projectDisplay.line3);
-    printf("%s\n", projectDisplay.line4); 
-    printf("%d\n", projectDisplay.line5);
+	struct project projectDisplay;
+	memset(&projectDisplay, 0, sizeof(struct project));
+	get(sock, &projectDisplay, sizeof(struct project));
+	printf("\n");
+	printf("Project Info:\n");
+	printf("Name:%s\n", projectDisplay.line1);
+	printf("Description:%s\n", projectDisplay.line2);
+	printf("Date:%s\n", projectDisplay.line3);
+	printf("Due Date:%s\n", projectDisplay.line4);
+	printf("Users(#): %d\n", projectDisplay.line5);
+
+
 }
+
+
 
 unsigned int displayMenuAndSendSelection(int sock)
 {
@@ -192,10 +209,23 @@ unsigned int displayMenuAndSendSelection(int sock)
     printf("%s\n", menuBuffer.line2);
     printf("%s\n", menuBuffer.line3);
     printf("%s\n", menuBuffer.line4); 
+    printf("%s\n", menuBuffer.line5);
     scanf("%d", &response);
     output = htonl(response);
     put(sock, &output, sizeof(unsigned int));
     return response;
+}
+
+void sendSearch(int sock)
+{
+	unsigned char msg[21];
+	unsigned char search[100];
+	memset(msg, 0, sizeof(msg));
+	get(sock, msg, sizeof(msg));
+	printf("%s\n", msg);
+
+	scanf("%s", search);
+	put(sock, search, 100);	
 }
 
 void sendProjectInfo(int sock)

@@ -15,6 +15,7 @@ struct menu
   unsigned char line2[20];
   unsigned char line3[20];
   unsigned char line4[20];
+  unsigned char line5[20];
 } men;
 
 
@@ -57,8 +58,10 @@ void editList(DataInList *, char[], char [], char [], char [], int);
 void displayList(DataInList *);
 
 void testList(char * , char * , char * , char * , int, int);
+void deleteItem(DataInList *, char *);
+void sendList(int, DataInList*, char *);
 
-void sendList(int, DataInList*);
+void askForSearch(int, char*);
 
 int main(int argc, char *argv[])
 {
@@ -165,7 +168,7 @@ void HandleTCPClient(int clntSocket)
 		    if(success == 1)
 			HandleTCPClientAuth(clntSocket);
 			if(success ==0)
-				printf("bad");
+				HandleTCPClient(clntSocket);
 
                     break;
             default: printf("Client selected junk.\n"); put(clntSocket, errorMsg, sizeof(errorMsg)); break;
@@ -187,9 +190,10 @@ void HandleTCPClientAuth(int clntSocket)
     unsigned char projectDescription[1000];
     unsigned char projectDate[8];
     unsigned char projectDueDate[8];
+
+	unsigned char search[100];
     int numUsers;
     
-
     DataInList *LinkedList = NULL;
     unsigned char bye[] = "Exiting Work Project Tool!";
 	
@@ -209,8 +213,14 @@ void HandleTCPClientAuth(int clntSocket)
 		    editList(LinkedList, projectName, projectDescription, projectDate, projectDueDate, numUsers);
 	    case 3: printf("Quit");
                     break;
-	    case 4: printf("View");
-		    sendList(clntSocket,LinkedList);
+	    case 4: printf("Search");
+				askForSearch(clntSocket, search);
+		   sendList(clntSocket,LinkedList, search);
+			displayList(LinkedList);
+	break;
+		case 5: printf("Delete");
+		askForProjectInfo(clntSocket, projectName, projectDescription, projectDate, projectDueDate, &numUsers);
+		deleteItem(LinkedList, projectName);
 		break;
             default: 
 	    break; 
@@ -277,7 +287,16 @@ DataInList * appendToList(DataInList *head, char pname[], char pdes[], char pd[]
 }
 
 
+void askForSearch(int sock, char *search)
+{
+	unsigned char msg[21];
 
+	memset(msg, 0, sizeof(msg));
+	strcpy(msg, "Search");
+	put(sock, msg, sizeof(msg));
+	memset(search, 0, 100);
+	get(sock, search, 100);
+}
 void askForProjectInfo(int sock, char * projectName, char * projectDescription, char * projectDate, char * projectDueDate, int * numUsers)
 {
 	unsigned char msg[21];
@@ -323,7 +342,8 @@ unsigned int sendMenuAuth(int clntSocket)
     strcpy(projectMenu.line1,"1)Add\n");
     strcpy(projectMenu.line2, "2)Edit\n");
     strcpy(projectMenu.line3, "3)Quit\n");
-    strcpy(projectMenu.line4, "4)View\n");
+    strcpy(projectMenu.line4, "4)Search\n");
+	strcpy(projectMenu.line5, "5)Delete\n");
     printf("Sending menu\n");
     put(clntSocket, &projectMenu, sizeof(struct menu));
     get(clntSocket, &response, sizeof(unsigned int));
@@ -431,20 +451,25 @@ void displayList(DataInList *head)
 	{
 		printf("Name:%s Description:%s Date:%s Due Date:%s Users:%d\n\n", head->projectname, head->projectdescription, head->date, head->duedate, head->numusers);
 		head = head->next;
+		
 
 	}
 	printf("\n");
 }
 
 
-void sendList(int socket, DataInList *head)
+void sendList(int socket, DataInList *head, char * search)
 {
-	printf("Projects\n");
 	while(head != NULL)
 	{
-		testList(head->projectname, head->projectdescription, head->date, head->duedate, head->numusers, socket);
+ 		
+	if(strcmp(search, head->projectname) == 0)
+	{	
+		testList(head->projectname,head->projectdescription, head->date, head->duedate, 
+		head->numusers, socket);
+	}
+		
 		head = head->next;
-
 	}
 }
 
@@ -452,14 +477,50 @@ void testList(char * name, char * des, char * date, char * due, int num, int soc
 {
 	printf("%s %s %s %s %d", name, des, date, due, num);
 
+	char msg[21];
+
    struct project projectDisplay;
-    memset(&projectDisplay, 0, sizeof(struct project));   /* Zero out structure */
-    strcpy(projectDisplay.line1,name);
-    strcpy(projectDisplay.line2, des);
-    strcpy(projectDisplay.line3, date);
-    strcpy(projectDisplay.line4, due);
-    projectDisplay.line5 = num;
-    put(sock, &projectDisplay, sizeof(struct project));
+   memset(&projectDisplay, 0, sizeof(struct project));  
+   get(sock, msg, sizeof(msg));
+   printf("%s", msg);
+
+   strcpy(projectDisplay.line1,name);
+   strcpy(projectDisplay.line2, des);
+   strcpy(projectDisplay.line3, date);
+   strcpy(projectDisplay.line4, due);
+   projectDisplay.line5 = num;
+   put(sock, &projectDisplay, sizeof(struct project));
+}
+
+
+
+void deleteItem(DataInList *head, char *name)
+{
+	DataInList * current  = head;
+	DataInList * prev = NULL;
+	
+	if(current == NULL)
+	{
+	}
+	else
+	{	
+		while(current != NULL)
+		{
+			if(strcmp(current->projectname, name) == 0)
+			{
+				printf("Deleting: project with name: %s", current->projectname);
+				if(prev == NULL){
+				head = current->next;
+				}
+				else {
+					prev->next = current-> next;
+				} 
+			}
+			prev = current;
+			current = current ->next;
+				
+		}
+	}
 }
 	
 void put(int sock, void * buffer, unsigned int size)
