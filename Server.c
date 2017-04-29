@@ -58,11 +58,14 @@ void editList(DataInList *, char[], char [], char [], char [], int);
 void displayList(DataInList *);
 
 void testList(char * , char * , char * , char * , int, int);
+void toFileList(char * , char * , char * , char * , int);
 void deleteItem(DataInList *, char *);
 void sendList(int, DataInList*, char *);
 
 
 void askForSearch(int, char*);
+
+void writeList(DataInList *);
 
 int main(int argc, char *argv[])
 {
@@ -228,6 +231,7 @@ void HandleTCPClientAuth(int clntSocket)
         }
         response = sendMenuAuth(clntSocket);
     }
+		writeList(LinkedList);
     put(clntSocket, bye, sizeof(bye));
     close(clntSocket); 
     printf("Connection with client %d closed.\n", clntSocket);
@@ -472,6 +476,28 @@ void sendList(int socket, DataInList *head, char * search)
 		
 		head = head->next;
 	}
+}
+
+void writeList(DataInList *head)
+{
+	while(head != NULL)
+	{
+		toFileList(head->projectname, head->projectdescription, head->date, head->duedate, head->numusers);
+		head = head->next;
+		
+	}
+
+
+}
+
+void toFileList(char * name, char * des, char * date, char * due, int num)
+{
+	printf("%s %s %s %s %d", name, des, date, due, num);
+
+	FILE * fp;
+	fp = fopen("projects.txt", "w+");
+	fprintf(fp, "%s %s %s %s %d\n", name, des, date, due, num);
+	fclose(fp);
 }
 
 void testList(char * name, char * des, char * date, char * due, int num, int sock)
