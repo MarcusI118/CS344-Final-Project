@@ -195,8 +195,6 @@ void askForList(int sock)
 
 }
 
-
-
 unsigned int displayMenuAndSendSelection(int sock)
 {
     struct menu menuBuffer;     /* Buffer for echo string */

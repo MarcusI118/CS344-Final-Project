@@ -61,6 +61,7 @@ void testList(char * , char * , char * , char * , int, int);
 void deleteItem(DataInList *, char *);
 void sendList(int, DataInList*, char *);
 
+
 void askForSearch(int, char*);
 
 int main(int argc, char *argv[])
@@ -227,7 +228,6 @@ void HandleTCPClientAuth(int clntSocket)
         }
         response = sendMenuAuth(clntSocket);
     }
-
     put(clntSocket, bye, sizeof(bye));
     close(clntSocket); 
     printf("Connection with client %d closed.\n", clntSocket);
@@ -456,6 +456,7 @@ void displayList(DataInList *head)
 	}
 	printf("\n");
 }
+
 
 
 void sendList(int socket, DataInList *head, char * search)
