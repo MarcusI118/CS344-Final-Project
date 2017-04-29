@@ -493,10 +493,9 @@ void writeList(DataInList *head)
 void toFileList(char * name, char * des, char * date, char * due, int num)
 {
 	printf("%s %s %s %s %d", name, des, date, due, num);
-
 	FILE * fp;
 	fp = fopen("projects.txt", "w+");
-	fprintf(fp, "%s %s %s %s %d\n", name, des, date, due, num);
+	fprintf(fp, "Name:%s Description:%s Date:%s Due Date:%s Users:%d\n", name, des, date, due, num);
 	fclose(fp);
 }
 
